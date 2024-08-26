@@ -1,0 +1,109 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Minimal ping API server
+paths:
+  /ping:
+    get:
+      responses:
+        "200":
+          description: pet response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pong"
+  /publish:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Post"
+      responses:
+        "201":
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostPublishResponse"
+  /delete:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeletePostRequest"
+      responses:
+        "200":
+          description: Good Delete
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeletePostResponse"
+components:
+  schemas:
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+      required:
+        - id
+        - userId
+        - title
+        - body
+    # base types
+    DeletePostRequest:
+      type: object
+      properties:
+        id:
+          type: string
+    DeletePostResponse:
+      type: object
+      properties:
+        status:
+          type: string
+    Pong:
+      type: object
+      required:
+        - ping
+      properties:
+        ping:
+          type: string
+          example: pong
+    PostPublishResponse:
+      type: object
+      properties:
+        result:
+          $ref: "#/components/schemas/PostPublishResponseResult"
+        errors:
+          $ref: "#/components/schemas/PostPublishResponseErrors"
+    PostPublishResponseResult:
+      type: object
+      required:
+        - postId
+      properties:
+        postId:
+          type: string
+    PostPublishResponseErrors:
+      type: object
+      nullable: true
+      properties:
+        badTitleError:
+          $ref: "#/components/schemas/PostPublishBadTitleError"
+    PostPublishBadTitleError:
+      type: object
+      nullable: true
+      required:
+        - message
+      properties:
+        message:
+          type: string

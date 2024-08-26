@@ -1,0 +1,6 @@
+package: schema
+generate:
+  chi-server: true
+  strict-server: true
+  models: true
+output: ./internal/generated/schema/server.go
