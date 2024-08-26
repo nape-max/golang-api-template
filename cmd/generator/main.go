@@ -11,6 +11,10 @@ import (
 	"regexp"
 	"strings"
 	"text/template"
+
+	conf "maxnap/platform/internal/config"
+
+	"github.com/BurntSushi/toml"
 )
 
 var handlerTemplate = template.Must(template.New("").Parse(`package handler
@@ -37,21 +41,33 @@ type Param struct {
 }
 
 func main() {
+	_, err := os.Stat("config.toml")
+	if err != nil {
+		panic(fmt.Errorf("cannot receive stat of config file: %w", err))
+	}
+
+	var cfg conf.ConfigGenerator
+	_, err = toml.DecodeFile("config.toml", &cfg)
+	if err != nil {
+		panic(fmt.Errorf("cannot decode config to struct: %w", err))
+	}
+
 	// Цель генерации передаётся переменной окружения
-	path := os.Getenv("GOFILE")
-	if path == "" {
+	pathToGeneratedServer := cfg.Generator.PathToGeneratedServer
+	if pathToGeneratedServer == "" {
 		log.Fatal("GOFILE must be set")
 	}
+
 	// Разбираем целевой файл в AST
 	astInFile, err := parser.ParseFile(
 		token.NewFileSet(),
-		path,
+		pathToGeneratedServer,
 		nil,
 		// Нас интересуют комментарии
 		parser.ParseComments,
 	)
 	if err != nil {
-		log.Fatalf("parse file: %v", err)
+		panic(fmt.Errorf("parse file error: %w", err))
 	}
 
 	generators := make([]Param, 0)
@@ -92,16 +108,11 @@ func main() {
 
 	for _, g := range generators {
 		handlerFileName := ToSnakeCase(g.HandlerName) + ".go"
+		handlersDir := cfg.Generator.PathToHandlers
 
-		handlersDir := "/internal/handler/"
-		mydir, err := os.Getwd()
+		entries, err := os.ReadDir(handlersDir)
 		if err != nil {
-			panic(err)
-		}
-
-		entries, err := os.ReadDir(mydir + handlersDir)
-		if err != nil {
-			log.Fatal(err)
+			panic(fmt.Errorf("cannot read dir: %w", err))
 		}
 
 		var found bool
@@ -123,7 +134,7 @@ func main() {
 			panic(fmt.Errorf("execute template: %v", err))
 		}
 
-		err = os.WriteFile(mydir+handlersDir+handlerFileName, buf.Bytes(), 0o644)
+		err = os.WriteFile(handlersDir+handlerFileName, buf.Bytes(), 0o644)
 		if err != nil {
 			fmt.Printf("\t%-14s %s: %s\n", "Error:", handlerFileName, err.Error())
 			continue

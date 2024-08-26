@@ -1,0 +1,9 @@
+[database.postgres]
+host = "127.0.0.1"
+port = "5762"
+username = "postgres"
+password = ""
+
+[generator]
+pathToGeneratedServer = "internal/generated/schema/server.go"
+pathToHandlers = "internal/handler"
