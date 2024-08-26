@@ -20,23 +20,16 @@ func main() {
 	slogLogger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	structLogger := logger.New(slogLogger)
 
-	mydir, err := os.Getwd()
-	if err != nil {
-		panic(fmt.Errorf("cannot receive current dir: %w", err))
-	}
-
-	_, err = os.Stat(mydir + "/config.toml")
+	_, err := os.Stat("config.toml")
 	if err != nil {
 		panic(fmt.Errorf("cannot receive stat of config file: %w", err))
 	}
 
 	var cfg conf.ConfigServer
-	_, err = toml.DecodeFile(mydir+"/config.toml", &cfg)
+	_, err = toml.DecodeFile("config.toml", &cfg)
 	if err != nil {
 		panic(fmt.Errorf("cannot decode config to struct: %w", err))
 	}
-
-	fmt.Println(cfg)
 
 	server := handler.New(structLogger)
 
