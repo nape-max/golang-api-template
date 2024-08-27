@@ -13,8 +13,6 @@ import (
 	"text/template"
 
 	conf "maxnap/platform/internal/config"
-
-	"github.com/BurntSushi/toml"
 )
 
 var handlerTemplate = template.Must(template.New("").Parse(`package handler
@@ -41,15 +39,9 @@ type Param struct {
 }
 
 func main() {
-	_, err := os.Stat("config.toml")
+	cfg, err := conf.NewConfigGenerator("config.toml")
 	if err != nil {
-		panic(fmt.Errorf("cannot receive stat of config file: %w", err))
-	}
-
-	var cfg conf.ConfigGenerator
-	_, err = toml.DecodeFile("config.toml", &cfg)
-	if err != nil {
-		panic(fmt.Errorf("cannot decode config to struct: %w", err))
+		panic(fmt.Errorf("cannot receive config for generator: %w", err))
 	}
 
 	// Цель генерации передаётся переменной окружения

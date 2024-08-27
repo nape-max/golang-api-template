@@ -13,3 +13,7 @@
 
 	echo "Done."
 
+GOBIN = "./bin"
+build:
+	go build -o $(GOBIN)/server ./cmd/server && \
+		go build -o $(GOBIN)/generator ./cmd/generator

@@ -7,15 +7,22 @@ import (
 	"log/slog"
 
 	"maxnap/platform/internal/pkg/logger"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type Server struct {
 	logger *logger.StructLogger
+	db     *sqlx.DB
 }
 
-func New(log *logger.StructLogger) Server {
+func New(
+	log *logger.StructLogger,
+	db *sqlx.DB,
+) Server {
 	return Server{
 		logger: log,
+		db:     db,
 	}
 }
 

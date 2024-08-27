@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"log/slog"
@@ -11,27 +12,29 @@ import (
 	"maxnap/platform/internal/generated/schema"
 	"maxnap/platform/internal/handler"
 	"maxnap/platform/internal/pkg/logger"
+	"maxnap/platform/internal/pkg/pg_client"
 
-	"github.com/BurntSushi/toml"
 	"github.com/go-chi/chi/v5"
 )
 
 func main() {
+	ctx := context.Background()
+
 	slogLogger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	structLogger := logger.New(slogLogger)
 
-	_, err := os.Stat("config.toml")
+	cfg, err := conf.NewConfigServer(ctx, "config.toml")
 	if err != nil {
-		panic(fmt.Errorf("cannot receive stat of config file: %w", err))
+		panic(fmt.Errorf("cannot prepare config: %w", err))
 	}
 
-	var cfg conf.ConfigServer
-	_, err = toml.DecodeFile("config.toml", &cfg)
+	db, err := pg_client.New(*conf.NewPostgresConfig(cfg.PostgresDatabase))
 	if err != nil {
-		panic(fmt.Errorf("cannot decode config to struct: %w", err))
+		panic(fmt.Errorf("database connection error: %w", err))
 	}
 
-	server := handler.New(structLogger)
+	// TODO: There is must be Service, not DB connection
+	server := handler.New(structLogger, db)
 
 	r := chi.NewRouter()
 	handler := schema.NewStrictHandler(server, nil)
